@@ -11,11 +11,18 @@ export default async function handler(req, res) {
   try {
     const r = await fetch("https://workers.dev", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36"
+      },
       body: JSON.stringify({ prompt: q })
     });
-    const data = await r.json();
-    return res.status(200).json(data);
+    const raw = await r.text();
+    try {
+      return res.status(200).json(JSON.parse(raw));
+    } catch {
+      return res.status(502).json({ error: "Cloudflare вернул HTML вместо JSON", preview: raw.slice(0, 150) });
+    }
   } catch (e) {
     return res.status(500).json({ error: e.message });
   }
